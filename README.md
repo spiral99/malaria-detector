@@ -1,4 +1,4 @@
-# Malaria parasite detection that holds up across clinics
+# Malaria parasite detection that measures accuracy across clinics
 
 MSc Data Science & Analytics capstone, Health informatics track (disease image classification).
 
