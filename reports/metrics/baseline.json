@@ -1,0 +1,27 @@
+{
+  "threshold": 0.15,
+  "note": "patch-level scores; not comparable with detection AP",
+  "splits": {
+    "val": {
+      "patches": 6854,
+      "positives": 2142,
+      "auroc": 0.9865896556698514,
+      "average_precision": 0.9723197133637854,
+      "f1": 0.9396035039188566
+    },
+    "in_site_test": {
+      "patches": 7660,
+      "positives": 2592,
+      "auroc": 0.9877119477574128,
+      "average_precision": 0.9821551356817936,
+      "f1": 0.9417267589163906
+    },
+    "cross_site_test": {
+      "patches": 20114,
+      "positives": 14159,
+      "auroc": 0.8993076057340619,
+      "average_precision": 0.9468866654223629,
+      "f1": 0.3429706208749489
+    }
+  }
+}

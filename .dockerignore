@@ -1,0 +1,5 @@
+*
+!service/
+!models/
+models/*.pt
+**/__pycache__/

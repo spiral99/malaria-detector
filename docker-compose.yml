@@ -1,0 +1,10 @@
+services:
+  api:
+    build: .
+    image: m33k/malaria-detector:latest
+    ports:
+      - "80:8000"                      # http://malaria-detector.localhost (no port needed)
+      - "8000:8000"                    # http://localhost:8000, used by the curl examples
+    environment:
+      PUBLIC_URL: http://malaria-detector.localhost   # printed when the app starts
+    restart: unless-stopped

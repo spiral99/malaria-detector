@@ -1,0 +1,62 @@
+# Data report
+
+Written by `python -m malaria.data.prepare`. Every exclusion is counted here.
+
+## uganda
+
+| Item | Count |
+| --- | ---: |
+| images found | 3925 |
+| annotation entries | 2747 |
+| negative labels | 688 |
+| excluded no annotation | 1178 |
+| boxes clipped | 2 |
+| boxes dropped degenerate | 1 |
+| images usable | 2747 |
+| orphan annotations | 0 |
+
+Annotation files read: {'voc': 0, 'csv': 1, 'coco': 0, 'yolo': 0, 'unrecognised': 0}
+
+Summary: {'images': 2747, 'boxes_trophozoite': 15837, 'boxes_wbc': 7004, 'images_without_parasites': 729, 'median_parasite_box_px': 92.0, 'image_sizes': {'1920x1080': 949, '4032x3016': 770, '4000x3000': 688, '4160x3120': 340}}
+
+Sample file names: ['id_0051lznyrt.jpg', 'id_00m1onu6hj.jpg', 'id_00n92f65ke.jpg', 'id_00sirs797x.jpg', 'id_013o32svbt.jpg', 'id_021o79u9zs.jpg', 'id_02i83lum2m.jpg', 'id_02kpdbnrfn.jpg']
+
+## ghana
+
+| Item | Count |
+| --- | ---: |
+| images found | 3045 |
+| annotation entries | 3045 |
+| images rotated upright | 2445 |
+| boxes dropped degenerate | 112 |
+| images usable | 3045 |
+| orphan annotations | 0 |
+
+Annotation files read: {'voc': 0, 'csv': 0, 'coco': 0, 'yolo': 3045, 'unrecognised': 0}
+
+Images with an EXIF rotation flag were rotated to the orientation a viewer shows, which is the frame their labels use, and the flag was dropped.
+
+Summary: {'images': 3045, 'boxes_trophozoite': 360880, 'boxes_wbc': 16174, 'images_without_parasites': 6, 'median_parasite_box_px': 53.3, 'image_sizes': {'3072x4096': 2244, '4096x3072': 412, '2976x2976': 271, '1200x1600': 7, '1803x1820': 1}}
+
+Sample file names: ['0.jpg', '1.jpg', '10.jpg', '100.jpg', '1000.jpg', '1001.jpg', '1002.jpg', '1003.jpg']
+
+## Splits
+
+| Split | Images |
+| --- | ---: |
+| uganda_train | 1921 |
+| uganda_val | 413 |
+| uganda_test | 413 |
+| ghana_test | 2745 |
+| ghana_adapt_pool | 200 |
+| ghana_calib | 100 |
+| ghana_adapt_50 | 50 |
+| ghana_adapt_50_replay | 100 |
+| ghana_adapt_100 | 100 |
+| ghana_adapt_100_replay | 200 |
+| ghana_adapt_200 | 200 |
+| ghana_adapt_200_replay | 400 |
+
+Images were split one by one. Several images can come from the same slide, so the in-site
+test score may be optimistic. Set `split.group_regex` to a pattern that captures the slide id
+in the file names above to keep each slide in one split. The cross-site test is unaffected.

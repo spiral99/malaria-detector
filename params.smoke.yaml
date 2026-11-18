@@ -1,0 +1,32 @@
+# Overrides for the smoke test: tiny synthetic data, tiny model, a few minutes on a CPU.
+paths:
+  raw: data_smoke/raw
+  interim: data_smoke/interim
+  processed: data_smoke/processed
+  models: data_smoke/models
+  runs: data_smoke/runs
+  reports: data_smoke/reports
+split:
+  adapt_pool: 12
+  calib_pool: 8
+train:
+  weights: yolo11n.pt
+  imgsz: 320
+  epochs: 12
+  batch: 8
+  patience: 50
+  workers: 0
+  device: cpu
+adapt:
+  sizes: [6, 12]
+  epochs: 4
+eval:
+  extra_imgsz: [480]
+  bootstrap: 200
+  worst_images: 4
+baseline:
+  epochs: 3
+  batch: 64
+  max_patches_per_split: 2000
+shift:
+  max_images_per_site: 60

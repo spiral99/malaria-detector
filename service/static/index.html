@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Malaria parasite detector</title>
+<style>
+  :root { --bg:#fcfcfb; --panel:#ffffff; --ink:#0b0b0b; --muted:#52514e; --line:#dedcd6; --parasite:#eb6834; --wbc:#2a78d6; --warn:#8a5a00; --warn-bg:#fff4d6; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1a1a19; --panel:#242423; --ink:#f0efec; --muted:#c3c2b7; --line:#3a3a37; --warn:#ffd27a; --warn-bg:#3a2f12; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  p.lead { color: var(--muted); margin: 0 0 20px; }
+  .bar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding:14px; background:var(--panel); border:1px solid var(--line); border-radius:10px; }
+  button { font:inherit; padding:8px 16px; border-radius:8px; border:1px solid var(--ink); background:var(--ink); color:var(--bg); cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  .grid { display:grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap:16px; margin-top:16px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; }
+  canvas { width:100%; height:auto; display:block; border-radius:6px; background:#000; }
+  .stat { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-bottom:1px solid var(--line); }
+  .stat b { font-size:1.6rem; font-variant-numeric: tabular-nums; }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; }
+  .flag { margin-top:12px; padding:10px 12px; border-radius:8px; background:var(--warn-bg); color:var(--warn); display:none; }
+  .small { color:var(--muted); font-size:.875rem; margin-top:12px; }
+  #status { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Malaria parasite detector</h1>
+  <p class="lead">Upload a thick blood-smear photo. The model marks parasites and white blood cells. It supports a trained reader and is not a diagnosis.</p>
+  <div class="bar">
+    <input type="file" id="file" accept="image/*">
+    <button id="go" disabled>Detect</button>
+    <span id="status"></span>
+  </div>
+  <div class="grid">
+    <div class="panel"><canvas id="view" width="800" height="600"></canvas></div>
+    <div class="panel">
+      <div class="stat"><span><span class="dot" style="background:var(--parasite)"></span>Parasites</span><b id="n0">–</b></div>
+      <div class="stat"><span><span class="dot" style="background:var(--wbc)"></span>White blood cells</span><b id="n1">–</b></div>
+      <div class="stat"><span>Parasites per white cell</span><b id="ratio">–</b></div>
+      <div class="flag" id="flag"></div>
+      <div class="small" id="meta"></div>
+    </div>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('view'), ctx = canvas.getContext('2d');
+let image = null;
+$('file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const img = new Image();
+  img.onload = () => { image = img; canvas.width = img.naturalWidth; canvas.height = img.naturalHeight; ctx.drawImage(img, 0, 0); $('go').disabled = false; };
+  img.src = URL.createObjectURL(f);
+});
+$('go').addEventListener('click', async () => {
+  const f = $('file').files[0]; if (!f) return;
+  $('status').textContent = 'Running…'; $('go').disabled = true;
+  try {
+    const body = new FormData(); body.append('file', f);
+    const res = await fetch('predict', { method: 'POST', body });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    ctx.drawImage(image, 0, 0);
+    const css = getComputedStyle(document.documentElement);
+    const names = Object.keys(data.counts);
+    ctx.lineWidth = Math.max(2, canvas.width / 500);
+    for (const d of data.detections) {
+      ctx.strokeStyle = css.getPropertyValue(names.indexOf(d.label) === 0 ? '--parasite' : '--wbc');
+      const [x1, y1, x2, y2] = d.box; ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+    }
+    $('n0').textContent = data.counts[names[0]]; $('n1').textContent = data.counts[names[1]] ?? '–';
+    $('ratio').textContent = data.parasites_per_wbc ?? '–';
+    const flag = $('flag');
+    flag.style.display = data.low_confidence ? 'block' : 'none';
+    flag.textContent = data.low_confidence ? 'Check by hand: ' + data.low_confidence_reasons.join('; ') + '.' : '';
+    $('meta').textContent = `Model ${data.model.name ?? ''}, trained on ${data.model.trained_on ?? '?'}; threshold ${data.threshold}.`;
+    $('status').textContent = '';
+  } catch (err) { $('status').textContent = 'Failed: ' + err.message; }
+  $('go').disabled = false;
+});
+</script>
+</body>
+</html>

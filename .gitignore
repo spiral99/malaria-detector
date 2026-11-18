@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.idea/
+# data is downloaded by the pipeline, never committed
+data/
+data_smoke/
+runs/
+mlruns/
+mlflow.db
+# pretrained starting weights are downloaded on first use
+/yolo*.pt
+weights/
+# trained weights: only the served model and the baseline are committed; the experiment models
+# (stain_aug, scale_aug, adapt_*) are recreated by the pipeline
+models/*.pt
+!models/base.pt
+!models/baseline_cnn.pt
+# cached predictions can be regenerated; metrics, figures and results are committed
+reports/predictions/

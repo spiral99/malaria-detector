@@ -1,0 +1,81 @@
+# Single source of configuration for the whole pipeline.
+# Override any value with a second YAML file:  python -m malaria.pipeline --override params.smoke.yaml
+
+dataset:
+  dataverse_url: https://dataverse.harvard.edu
+  doi: "doi:10.7910/DVN/VEADSE"       # Lacuna Malaria Datasets (Makerere AI Lab + minoHealth), CC BY 4.0
+  include: []                          # regexes on file names; empty = everything not excluded
+  exclude: ["(?i)thin"]                # this project uses thick smears only
+  smear: thick
+  sites: [uganda, ghana]               # a file/archive is assigned to a site when its name contains the word
+
+paths:
+  raw: data/raw                        # downloaded archives, exactly as published
+  interim: data/interim                # unpacked archives
+  processed: data/processed            # YOLO-format dataset, split lists, index
+  models: models                       # trained weights, exported ONNX, model metadata
+  runs: runs                           # raw training run folders
+  reports: reports                     # metrics, predictions, figures
+
+classes:
+  names: [trophozoite, wbc]            # class 0 is the parasite class
+  aliases:                             # raw label spellings (case-insensitive) -> class
+    trophozoite: [trophozoite, trophozoites, troph, parasite, parasites, plasmodium, "malaria parasite", malaria]
+    wbc: [wbc, wbcs, "white blood cell", "white blood cells", white_blood_cell, leukocyte, leucocyte]
+  negative_labels: [neg, negative, none, "no parasite", background]   # image-level "nothing here" labels
+
+split:
+  seed: 42
+  train_site: uganda
+  test_site: ghana
+  val_fraction: 0.15                   # of the training site
+  test_fraction: 0.15                  # of the training site (in-site test)
+  adapt_pool: 200                      # test-site images set aside for the few-shot experiment; never in ghana_test
+  calib_pool: 100                      # test-site images used ONLY to choose a decision threshold for that site;
+                                       # never trained on and never in ghana_test
+  group_regex: null                    # optional regex with one capture group = slide id, to keep a slide's
+                                       # images in one split. Check reports/data_report.md for sample file names.
+
+train:
+  weights: yolo11s.pt
+  imgsz: 1024
+  epochs: 80
+  batch: 8
+  patience: 15
+  workers: 4
+  device: null                         # null = let Ultralytics pick (GPU if present)
+  variants:                            # each variant is one training run on the training site only
+    base:      {hsv_h: 0.015, hsv_s: 0.7, hsv_v: 0.4}              # library defaults
+    stain_aug: {hsv_h: 0.05,  hsv_s: 0.9, hsv_v: 0.6}              # tests the colour hypothesis
+    scale_aug: {hsv_h: 0.015, hsv_s: 0.7, hsv_v: 0.4, scale: 0.9}  # tests the size hypothesis: random zoom 0.1x-1.9x (default 0.5)
+
+adapt:                                 # fine-tune the selected model on N labelled test-site images
+  sizes: [50, 100, 200]
+  modes: [plain, replay]               # plain: new-site images only; replay: plus the same number of training-site images
+  replay_ratio: 1.0                    # training-site images per new-site image in replay mode
+  epochs: 20
+  lr0: 0.002
+
+eval:
+  iou: 0.5                             # a detection counts when it overlaps a labelled box by at least this much
+  nms_iou: 0.6
+  min_conf: 0.001
+  bootstrap: 1000
+  worst_images: 12
+  extra_imgsz: [2048]                  # also run the trained (non-adapted) models at these input sizes: a no-retraining
+                                       # test of whether enlarging the new site's tiny parasites helps
+
+baseline:
+  patch: 48
+  context: 2.0                         # crop side = context x the longer side of the box
+  neg_per_pos: 2
+  max_patches_per_split: 20000
+  epochs: 8
+  batch: 256
+  lr: 0.001
+
+shift:
+  max_images_per_site: 400
+
+serve:
+  low_conf_margin: 0.15                # detections this close above the threshold raise the low-confidence flag
