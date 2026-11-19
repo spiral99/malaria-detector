@@ -139,11 +139,18 @@ Training produces small files. After the run, commit `models/` (weights, `model.
 Experiment tracking: `mlflow ui --backend-store-uri sqlite:///mlflow.db`, then open <http://localhost:5000>.
 
 ## Serve the model
-
+The complete model and UI implementation has been uploaded to docker hub
+```bash
+https://hub.docker.com/r/m33k/malaria-detector
+```
+to build locally from the code
 ```bash
 docker compose up --build
 ```
-
+to pull the complete image of the model and UI implementation
+```bash
+docker compose up --build or docker pull m33k/malaria-detector
+```
 Then open <http://malaria-detector.localhost> for the demo page, or
 <http://malaria-detector.localhost/docs> for the API docs. Browsers treat any name ending in
 `.localhost` as your own computer, so this needs no setup. The app also answers at
